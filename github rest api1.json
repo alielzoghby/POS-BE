@@ -1,0 +1,1291 @@
+{
+  "name": "Freelance Management API",
+  "version": "1.0.0",
+  "description": "Complete API documentation for freelance management system with products, orders, clients, categories, users, and more",
+  "baseUrl": "http://localhost:3000",
+  "items": [
+    {
+      "type": "folder",
+      "name": "Authentication",
+      "description": "User authentication and authorization endpoints",
+      "items": [
+        {
+          "type": "http",
+          "name": "Login",
+          "description": "Authenticate user and get JWT token",
+          "request": {
+            "url": "{{baseUrl}}/auth/login",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "docs": "Login with email and password to get authentication token. Returns JWT token for subsequent API calls.",
+            "tests": "test(\"Login successful\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('token');\n});"
+          },
+          "response": {
+            "examples": [
+              {
+                "name": "Success Response",
+                "status": 200,
+                "body": {
+                  "status": 200,
+                  "message": "Login successful",
+                  "data": {
+                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "user": {
+                      "user_id": 1,
+                      "email": "admin@example.com",
+                      "first_name": "Admin",
+                      "last_name": "User",
+                      "role": "ADMIN"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "Invalid Credentials",
+                "status": 401,
+                "body": {
+                  "status": 401,
+                  "message": "Invalid credentials",
+                  "data": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "http",
+          "name": "Check Authentication",
+          "description": "Verify if current token is valid",
+          "request": {
+            "url": "{{baseUrl}}/auth/authenticated",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "docs": "Check if the provided JWT token is valid and get current user information.",
+            "tests": "test(\"Token valid\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('user');\n});"
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Users",
+      "description": "User management endpoints for admin operations",
+      "items": [
+        {
+          "type": "http",
+          "name": "Get All Users",
+          "description": "Retrieve all users with pagination and filtering",
+        "request": {
+            "url": "{{baseUrl}}/users/",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "params": [
+              {
+                "name": "page",
+                "value": "1",
+                "description": "Page number for pagination"
+              },
+              {
+                "name": "limit",
+                "value": "10",
+                "description": "Number of items per page"
+              },
+              {
+                "name": "search",
+                "value": "",
+                "description": "Search by name or email"
+              },
+              {
+                "name": "role",
+                "value": "",
+                "description": "Filter by role (ADMIN, CASHIER)"
+              }
+            ],
+            "docs": "Get paginated list of all users. Supports search and filtering by role.",
+            "tests": "test(\"Users retrieved\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('users');\n  expect(res.body.data).to.have.property('pagination');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Create User",
+          "description": "Create a new user account",
+          "request": {
+            "url": "{{baseUrl}}/users/",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"email\": \"newuser@example.com\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"password\": \"password123\",\n  \"role\": \"CASHIER\"\n}"
+            },
+            "docs": "Create a new user account. Email must be unique. Role defaults to CASHIER if not specified.",
+            "tests": "test(\"User created\", function() {\n  expect(res.status).to.eql(201);\n  expect(res.body.data).to.have.property('user_id');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Get User by ID",
+          "description": "Retrieve specific user by ID",
+          "request": {
+            "url": "{{baseUrl}}/users/1",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "docs": "Get detailed information about a specific user by their ID.",
+            "tests": "test(\"User found\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('user_id');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Update User",
+          "description": "Update existing user information",
+          "request": {
+            "url": "{{baseUrl}}/users/1",
+            "method": "PATCH",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"first_name\": \"Updated Name\",\n  \"role\": \"ADMIN\"\n}"
+            },
+            "docs": "Update user information. All fields are optional for partial updates.",
+            "tests": "test(\"User updated\", function() {\n  expect(res.status).to.eql(200);\n});"
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Clients",
+      "description": "Client management endpoints",
+      "items": [
+        {
+          "type": "http",
+          "name": "Get All Clients",
+          "description": "Retrieve all clients with pagination and filtering",
+          "request": {
+            "url": "{{baseUrl}}/clients/",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "params": [
+              {
+                "name": "page",
+                "value": "1",
+                "description": "Page number for pagination"
+              },
+              {
+                "name": "limit",
+                "value": "10",
+                "description": "Number of items per page"
+              },
+              {
+                "name": "search",
+                "value": "",
+                "description": "Search by name, email, or company"
+              },
+              {
+                "name": "active",
+                "value": "",
+                "description": "Filter by active status (true/false)"
+              },
+              {
+                "name": "company",
+                "value": "",
+                "description": "Filter by company name"
+              }
+            ],
+            "docs": "Get paginated list of all clients. Supports search and filtering.",
+            "tests": "test(\"Clients retrieved\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('clients');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Create Client",
+          "description": "Create a new client",
+          "request": {
+            "url": "{{baseUrl}}/clients/",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"title\": \"M\",\n  \"first_name\": \"Ahmed\",\n  \"last_name\": \"Sayed\",\n  \"email\": \"ahmed@example.com\",\n  \"company\": \"Tech Corp\",\n  \"sales\": 1500,\n  \"active\": true\n}"
+            },
+            "docs": "Create a new client. Email must be unique. Active defaults to true.",
+            "tests": "test(\"Client created\", function() {\n  expect(res.status).to.eql(201);\n  expect(res.body.data).to.have.property('client_id');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Get Client by ID",
+          "description": "Retrieve specific client with addresses and phone numbers",
+          "request": {
+            "url": "{{baseUrl}}/clients/1",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "docs": "Get detailed client information including addresses and phone numbers.",
+            "tests": "test(\"Client found\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('client_id');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Update Client",
+          "description": "Update existing client information",
+          "request": {
+            "url": "{{baseUrl}}/clients/1",
+            "method": "PUT",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"first_name\": \"Updated Name\",\n  \"company\": \"New Company\",\n  \"active\": false\n}"
+            },
+            "docs": "Update client information. All fields are optional for partial updates.",
+            "tests": "test(\"Client updated\", function() {\n  expect(res.status).to.eql(200);\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Delete Client",
+          "description": "Delete client and associated data",
+          "request": {
+            "url": "{{baseUrl}}/clients/1",
+            "method": "DELETE",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "docs": "Delete client. This will also delete associated addresses and phone numbers due to cascade delete.",
+            "tests": "test(\"Client deleted\", function() {\n  expect(res.status).to.eql(200);\n});"
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Categories",
+      "description": "Product category management endpoints",
+      "items": [
+        {
+          "type": "http",
+          "name": "Get All Categories",
+          "description": "Retrieve all categories with pagination",
+        "request": {
+            "url": "{{baseUrl}}/categories/",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "params": [
+              {
+                "name": "page",
+                "value": "1",
+                "description": "Page number for pagination"
+              },
+              {
+                "name": "limit",
+                "value": "10",
+                "description": "Number of items per page"
+              },
+              {
+                "name": "search",
+                "value": "",
+                "description": "Search by category name"
+              }
+            ],
+            "docs": "Get paginated list of all product categories.",
+            "tests": "test(\"Categories retrieved\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('categories');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Create Category",
+          "description": "Create a new product category",
+          "request": {
+            "url": "{{baseUrl}}/categories/",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"name\": \"Electronics\"\n}"
+            },
+            "docs": "Create a new product category. Category name must be unique.",
+            "tests": "test(\"Category created\", function() {\n  expect(res.status).to.eql(201);\n  expect(res.body.data).to.have.property('category_id');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Get Category by ID",
+          "description": "Retrieve specific category with products",
+          "request": {
+            "url": "{{baseUrl}}/categories/1",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "docs": "Get category details including associated products.",
+            "tests": "test(\"Category found\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('category_id');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Update Category",
+          "description": "Update existing category",
+          "request": {
+            "url": "{{baseUrl}}/categories/1",
+            "method": "PUT",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"name\": \"Updated Electronics\"\n}"
+            },
+            "docs": "Update category name. Name must remain unique.",
+            "tests": "test(\"Category updated\", function() {\n  expect(res.status).to.eql(200);\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Delete Category",
+          "description": "Delete category if no products are associated",
+          "request": {
+            "url": "{{baseUrl}}/categories/1",
+            "method": "DELETE",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "docs": "Delete category. Cannot delete if products are still associated with this category.",
+            "tests": "test(\"Category deleted\", function() {\n  expect(res.status).to.eql(200);\n});"
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Products",
+      "description": "Product management endpoints with inventory tracking",
+      "items": [
+        {
+          "type": "http",
+          "name": "Get All Products",
+          "description": "Retrieve all products with advanced filtering",
+          "request": {
+            "url": "{{baseUrl}}/products/",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "params": [
+              {
+                "name": "page",
+                "value": "1",
+                "description": "Page number for pagination"
+              },
+              {
+                "name": "limit",
+                "value": "10",
+                "description": "Number of items per page"
+              },
+              {
+                "name": "search",
+                "value": "",
+                "description": "Search by name, reference, or category"
+              },
+              {
+                "name": "category_id",
+                "value": "",
+                "description": "Filter by category ID"
+              },
+              {
+                "name": "status",
+                "value": "",
+                "description": "Filter by stock status (in stock, out of stock, low stock)"
+              },
+              {
+                "name": "show_online",
+                "value": "",
+                "description": "Filter by online visibility (true/false)"
+              }
+            ],
+            "docs": "Get paginated list of products with comprehensive filtering options.",
+            "tests": "test(\"Products retrieved\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('products');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Create Product",
+          "description": "Create a new product with image upload",
+          "request": {
+            "url": "{{baseUrl}}/products/",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "multipart/form-data",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "multipartForm",
+              "multipartForm": [
+                {
+                  "type": "text",
+                  "name": "name",
+                  "value": "Premium Product",
+                  "description": "Product name (required)"
+                },
+                {
+                  "type": "text",
+                  "name": "reference",
+                  "value": "PROD001",
+                  "description": "Unique product reference (required)"
+                },
+                {
+                  "type": "text",
+                  "name": "category_id",
+                  "value": "1",
+                  "description": "Category ID (required)"
+                },
+                {
+                  "type": "text",
+                  "name": "base_price",
+                  "value": "99.99",
+                  "description": "Base price (required)"
+                },
+                {
+                  "type": "text",
+                  "name": "final_price",
+                  "value": "89.99",
+                  "description": "Final price (required)"
+                },
+                {
+                  "type": "text",
+                  "name": "quantity",
+                  "value": "100",
+                  "description": "Initial stock quantity (required)"
+                },
+                {
+                  "type": "text",
+                  "name": "unit",
+                  "value": "PIECE",
+                  "description": "Unit type (PIECE, KILOGRAM, etc.)"
+                },
+                {
+                  "type": "text",
+                  "name": "unit_value",
+                  "value": "1",
+                  "description": "Unit value (default: 1)"
+                },
+                {
+                  "type": "text",
+                  "name": "unit_price",
+                  "value": "0",
+                  "description": "Unit price (default: 0)"
+                },
+                {
+                  "type": "text",
+                  "name": "show_online",
+                  "value": "true",
+                  "description": "Show online (default: true)"
+                },
+                {
+                  "type": "text",
+                  "name": "sub_product",
+                  "value": "false",
+                  "description": "Is sub-product (default: false)"
+                },
+                {
+                  "type": "text",
+                  "name": "status",
+                  "value": "in stock",
+                  "description": "Stock status"
+                },
+                {
+                  "type": "text",
+                  "name": "expiration_date",
+                  "value": "2024-12-31",
+                  "description": "Expiration date (optional)"
+                },
+                {
+                  "type": "text",
+                  "name": "lot",
+                  "value": "LOT001",
+                  "description": "Lot number (optional)"
+                },
+                {
+                  "type": "file",
+                  "name": "image",
+                  "description": "Product image file (optional)"
+                }
+              ]
+            },
+            "docs": "Create a new product. Supports image upload. Reference must be unique. Default image is used if no image provided.",
+            "tests": "test(\"Product created\", function() {\n  expect(res.status).to.eql(201);\n  expect(res.body.data).to.have.property('product_id');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Get Product by ID",
+          "description": "Retrieve specific product with full details",
+          "request": {
+            "url": "{{baseUrl}}/products/1",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                  "enabled": true
+                }
+              ],
+            "docs": "Get detailed product information including category and order history.",
+            "tests": "test(\"Product found\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('product_id');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Update Product",
+          "description": "Update existing product information",
+          "request": {
+            "url": "{{baseUrl}}/products/1",
+            "method": "PATCH",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"name\": \"Updated Product Name\",\n  \"final_price\": 79.99,\n  \"quantity\": 150,\n  \"show_online\": false\n}"
+            },
+            "docs": "Update product information. All fields are optional for partial updates.",
+            "tests": "test(\"Product updated\", function() {\n  expect(res.status).to.eql(200);\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Delete Product",
+          "description": "Delete product if not used in orders",
+          "request": {
+            "url": "{{baseUrl}}/products/1",
+            "method": "DELETE",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "docs": "Delete product. Cannot delete if product is used in any orders.",
+            "tests": "test(\"Product deleted\", function() {\n  expect(res.status).to.eql(200);\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Delete Multiple Products",
+          "description": "Delete multiple products at once",
+          "request": {
+            "url": "{{baseUrl}}/products/",
+            "method": "DELETE",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"ids\": [1, 2, 3]\n}"
+            },
+            "docs": "Delete multiple products by providing array of IDs. Cannot delete products used in orders.",
+            "tests": "test(\"Products deleted\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('deletedCount');\n});"
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Orders",
+      "description": "Order management with automatic inventory tracking",
+      "items": [
+        {
+          "type": "http",
+          "name": "Get All Orders",
+          "description": "Retrieve all orders with filtering",
+        "request": {
+            "url": "{{baseUrl}}/orders/",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "params": [
+              {
+                "name": "page",
+                "value": "1",
+                "description": "Page number for pagination"
+              },
+              {
+                "name": "limit",
+                "value": "10",
+                "description": "Number of items per page"
+              },
+              {
+                "name": "search",
+                "value": "",
+                "description": "Search by reference or client info"
+              },
+              {
+                "name": "client_id",
+                "value": "",
+                "description": "Filter by client ID"
+              },
+              {
+                "name": "minPrice",
+                "value": "",
+                "description": "Minimum total price filter"
+              },
+              {
+                "name": "maxPrice",
+                "value": "",
+                "description": "Maximum total price filter"
+              }
+            ],
+            "docs": "Get paginated list of orders with comprehensive filtering options.",
+            "tests": "test(\"Orders retrieved\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('orders');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Create Order with Products",
+          "description": "Create order with products and automatic inventory management",
+          "request": {
+            "url": "{{baseUrl}}/orders/with-products",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"client_id\": 1,\n  \"products\": [\n    {\n      \"product_id\": 1,\n      \"quantity\": 2,\n      \"price\": 89.99\n    }\n  ],\n  \"voucher_reference\": \"SAVE50\",\n  \"payment_method\": \"CARD\",\n  \"tip\": 15.00,\n  \"paid\": 150.00\n}"
+            },
+            "docs": "Create order with products. NEW FEATURES: Auto-calculates sub_total, tax, due amount, and paid_status. Validates voucher expiry and usage limits. Automatically deactivates single-use vouchers. Requires authentication.",
+            "tests": "test(\"Order created\", function() {\n  expect(res.status).to.eql(201);\n  expect(res.body.data).to.have.property('order_id');\n  expect(res.body.data).to.have.property('total_price');\n  expect(res.body.data).to.have.property('sub_total');\n  expect(res.body.data).to.have.property('tax');\n  expect(res.body.data).to.have.property('due');\n  expect(res.body.data).to.have.property('paid_status');\n  expect(res.body.data).to.have.property('created_by');\n  expect(res.body.data).to.have.property('creator');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Create Empty Order",
+          "description": "Create empty order for later product addition",
+          "request": {
+            "url": "{{baseUrl}}/orders/",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"client_id\": 1,\n  \"voucher_reference\": \"SAVE50\",\n  \"payment_method\": \"CASH\",\n  \"tip\": 5.00,\n  \"paid\": 0.00\n}"
+            },
+            "docs": "Create empty order that can be populated with products later.",
+            "tests": "test(\"Empty order created\", function() {\n  expect(res.status).to.eql(201);\n  expect(res.body.data).to.have.property('order_id');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Get Order by ID",
+          "description": "Retrieve specific order with full details",
+          "request": {
+            "url": "{{baseUrl}}/orders/1",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "docs": "Get detailed order information including client details and all products.",
+            "tests": "test(\"Order found\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('order_id');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Update Order",
+          "description": "Update order details with automatic total recalculation",
+          "request": {
+            "url": "{{baseUrl}}/orders/1",
+            "method": "PUT",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"client_id\": 2,\n  \"voucher_reference\": \"SAVE15PERCENT\",\n  \"payment_method\": \"CARD\",\n  \"tip\": 20.00,\n  \"paid\": 200.00\n}"
+            },
+            "docs": "Update order details. NEW: Auto-recalculates sub_total, tax, total_price, due amount, and paid_status based on the new paid amount.",
+            "tests": "test(\"Order updated\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('due');\n  expect(res.body.data).to.have.property('paid_status');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Delete Order",
+          "description": "Delete order and restore product quantities",
+          "request": {
+            "url": "{{baseUrl}}/orders/1",
+            "method": "DELETE",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "docs": "Delete order and automatically restore product quantities to inventory.",
+            "tests": "test(\"Order deleted\", function() {\n  expect(res.status).to.eql(200);\n});"
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Vouchers",
+      "description": "Discount voucher management",
+      "items": [
+        {
+          "type": "http",
+          "name": "Get All Vouchers",
+          "description": "Retrieve all vouchers",
+        "request": {
+            "url": "{{baseUrl}}/vouchers/",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "docs": "Get list of all discount vouchers.",
+            "tests": "test(\"Vouchers retrieved\", function() {\n  expect(res.status).to.eql(200);\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Create Voucher",
+          "description": "Create new discount voucher",
+          "request": {
+            "url": "{{baseUrl}}/vouchers/",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"amount\": 50,\n  \"voucher_reference\": \"SAVE50\",\n  \"active\": true,\n  \"expired_at\": \"2024-12-31T23:59:59Z\",\n  \"multiple\": true\n}"
+            },
+            "docs": "Create voucher with fixed amount discount. New fields: active (controls if voucher can be used), expired_at (expiration date), multiple (true for multi-use, false for single-use).",
+            "tests": "test(\"Voucher created\", function() {\n  expect(res.status).to.eql(201);\n  expect(res.body.data).to.have.property('voucher_id');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Create Percentage Voucher",
+          "description": "Create percentage-based discount voucher",
+          "request": {
+            "url": "{{baseUrl}}/vouchers/",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"percentage\": 15,\n  \"voucher_reference\": \"SAVE15PERCENT\",\n  \"active\": true,\n  \"expired_at\": \"2024-12-31T23:59:59Z\",\n  \"multiple\": false\n}"
+            },
+            "docs": "Create percentage-based voucher (1-100%). This example shows a single-use voucher (multiple: false) that expires at year end.",
+            "tests": "test(\"Percentage voucher created\", function() {\n  expect(res.status).to.eql(201);\n  expect(res.body.data).to.have.property('voucher_id');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Create Single-Use Voucher",
+          "description": "Create a single-use voucher that becomes inactive after first use",
+          "request": {
+            "url": "{{baseUrl}}/vouchers/",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"amount\": 25,\n  \"voucher_reference\": \"ONEUSE25\",\n  \"active\": true,\n  \"expired_at\": \"2024-06-30T23:59:59Z\",\n  \"multiple\": false\n}"
+            },
+            "docs": "Create a single-use voucher (multiple: false) that automatically becomes inactive after first use. Perfect for one-time promotional codes.",
+            "tests": "test(\"Single-use voucher created\", function() {\n  expect(res.status).to.eql(201);\n  expect(res.body.data.multiple).to.eql(false);\n  expect(res.body.data.active).to.eql(true);\n});"
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Configuration",
+      "description": "System configuration management",
+      "items": [
+        {
+          "type": "http",
+          "name": "Get Configuration",
+          "description": "Retrieve current system configuration",
+          "request": {
+            "url": "{{baseUrl}}/configration/",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "docs": "Get current system configuration including tax rate.",
+            "tests": "test(\"Configuration retrieved\", function() {\n  expect(res.status).to.eql(200);\n  expect(res.body.data).to.have.property('tax');\n});"
+          }
+        },
+        {
+          "type": "http",
+          "name": "Update Configuration",
+          "description": "Update system configuration",
+          "request": {
+            "url": "{{baseUrl}}/configration/",
+            "method": "POST",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "enabled": true
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"tax\": 15\n}"
+            },
+            "docs": "Update system configuration. Tax rate is percentage (0-100).",
+            "tests": "test(\"Configuration updated\", function() {\n  expect(res.status).to.eql(200);\n});"
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Lookup",
+      "description": "Lookup data for dropdowns and references",
+      "items": [
+        {
+          "type": "http",
+          "name": "Get Categories Lookup",
+          "description": "Get simplified categories list for dropdowns",
+          "request": {
+            "url": "{{baseUrl}}/lookup/categories",
+            "method": "GET",
+            "headers": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{token}}",
+                "enabled": true
+              }
+            ],
+            "docs": "Get simplified categories list suitable for dropdown menus and form selects.",
+            "tests": "test(\"Categories lookup retrieved\", function() {\n  expect(res.status).to.eql(200);\n  expect(Array.isArray(res.body.data)).to.be.true;\n});"
+          }
+        }
+      ]
+    }
+  ],
+  "environments": [
+    {
+      "name": "Development",
+      "variables": [
+        {
+          "name": "baseUrl",
+          "value": "http://localhost:3000",
+          "enabled": true,
+          "secret": false,
+          "type": "text",
+          "description": "Base URL for development server"
+        },
+        {
+          "name": "token",
+          "value": "",
+          "enabled": true,
+          "secret": true,
+          "type": "text",
+          "description": "JWT authentication token"
+        }
+      ]
+    },
+    {
+      "name": "Production",
+      "variables": [
+        {
+          "name": "baseUrl",
+          "value": "https://api.yourdomain.com",
+          "enabled": true,
+          "secret": false,
+          "type": "text",
+          "description": "Base URL for production server"
+        },
+        {
+          "name": "token",
+          "value": "",
+          "enabled": true,
+          "secret": true,
+          "type": "text",
+          "description": "JWT authentication token"
+        }
+      ]
+    }
+  ],
+  "schemas": {
+    "User": {
+      "type": "object",
+      "properties": {
+        "user_id": {"type": "integer", "example": 1},
+        "email": {"type": "string", "format": "email", "example": "admin@example.com"},
+        "first_name": {"type": "string", "example": "John"},
+        "last_name": {"type": "string", "example": "Doe"},
+        "role": {"type": "string", "enum": ["ADMIN", "CASHIER"], "example": "ADMIN"}
+      }
+    },
+    "Client": {
+      "type": "object",
+      "properties": {
+        "client_id": {"type": "integer", "example": 1},
+        "title": {"type": "string", "enum": ["M", "Mme"], "example": "M"},
+        "first_name": {"type": "string", "example": "Ahmed"},
+        "last_name": {"type": "string", "example": "Sayed"},
+        "email": {"type": "string", "format": "email", "example": "ahmed@example.com"},
+        "company": {"type": "string", "example": "Tech Corp"},
+        "sales": {"type": "integer", "example": 1500},
+        "active": {"type": "boolean", "example": true},
+        "addresses": {"type": "array", "items": {"$ref": "#/schemas/Address"}},
+        "phoneNumbers": {"type": "array", "items": {"$ref": "#/schemas/PhoneNumber"}}
+      }
+    },
+    "Address": {
+      "type": "object",
+      "properties": {
+        "address_id": {"type": "integer", "example": 1},
+        "street": {"type": "string", "example": "123 Main St"},
+        "city": {"type": "string", "example": "New York"},
+        "state": {"type": "string", "example": "NY"},
+        "postal_code": {"type": "string", "example": "10001"},
+        "country": {"type": "string", "example": "USA"},
+        "is_primary": {"type": "boolean", "example": true}
+      }
+    },
+    "PhoneNumber": {
+      "type": "object",
+      "properties": {
+        "phone_id": {"type": "integer", "example": 1},
+        "phone_number": {"type": "string", "example": "+1234567890"},
+        "phone_type": {"type": "string", "enum": ["MOBILE", "HOME", "WORK", "FAX"], "example": "MOBILE"},
+        "is_primary": {"type": "boolean", "example": true}
+      }
+    },
+    "Product": {
+      "type": "object",
+      "properties": {
+        "product_id": {"type": "integer", "example": 1},
+        "image": {"type": "string", "example": "https://via.placeholder.com/300x300?text=No+Image"},
+        "name": {"type": "string", "example": "Premium Product"},
+        "reference": {"type": "string", "example": "PROD001"},
+        "category_id": {"type": "integer", "example": 1},
+        "base_price": {"type": "number", "format": "float", "example": 99.99},
+        "final_price": {"type": "number", "format": "float", "example": 89.99},
+        "status": {"type": "string", "enum": ["IN_STOCK", "OUT_OF_STOCK", "LOW_STOCK"], "example": "IN_STOCK"},
+        "quantity": {"type": "integer", "example": 100},
+        "unit": {"type": "string", "enum": ["PIECE", "KILOGRAM", "GRAM", "LITER", "MILLILITER", "METER", "CENTIMETER", "PACK", "BOX", "BOTTLE"], "example": "PIECE"},
+        "unit_value": {"type": "integer", "example": 1},
+        "unit_price": {"type": "integer", "example": 0},
+        "show_online": {"type": "boolean", "example": true},
+        "sub_product": {"type": "boolean", "example": false},
+        "expiration_date": {"type": "string", "example": "2024-12-31"},
+        "lot": {"type": "string", "example": "LOT001"}
+      }
+    },
+    "Order": {
+      "type": "object",
+      "properties": {
+        "order_id": {"type": "integer", "example": 1},
+        "client_id": {"type": "integer", "example": 1},
+        "reference": {"type": "string", "example": "ORD-123456"},
+        "total_price": {"type": "number", "format": "float", "example": 264.97},
+        "tip": {"type": "number", "format": "float", "example": 15.00},
+        "payment_method": {"type": "string", "enum": ["CASH", "CARD"], "example": "CARD"},
+        "voucher_reference": {"type": "string", "example": "SAVE50"},
+        "created_by": {"type": "integer", "example": 1},
+        "created_at": {"type": "string", "format": "date-time", "example": "2024-01-15T10:30:00Z"},
+        "paid": {"type": "number", "format": "float", "example": 200.00},
+        "due": {"type": "number", "format": "float", "example": 64.97},
+        "paid_status": {"type": "string", "enum": ["IN_PROGRESS", "PAID"], "example": "IN_PROGRESS"},
+        "tax": {"type": "number", "format": "float", "example": 24.97},
+        "sub_total": {"type": "number", "format": "float", "example": 179.98},
+        "client": {"$ref": "#/schemas/Client"},
+        "creator": {"$ref": "#/schemas/User"},
+        "productOrders": {"type": "array", "items": {"$ref": "#/schemas/ProductOrder"}}
+      }
+    },
+    "ProductOrder": {
+      "type": "object",
+      "properties": {
+        "product_id": {"type": "integer", "example": 1},
+        "order_id": {"type": "integer", "example": 1},
+        "quantity": {"type": "integer", "example": 2},
+        "price": {"type": "number", "format": "float", "example": 50.00},
+        "product": {"$ref": "#/schemas/Product"}
+      }
+    },
+    "Voucher": {
+      "type": "object",
+      "properties": {
+        "voucher_id": {"type": "integer", "example": 1},
+        "amount": {"type": "integer", "example": 50},
+        "percentage": {"type": "integer", "example": 15},
+        "voucher_reference": {"type": "string", "example": "SAVE50"},
+        "active": {"type": "boolean", "example": true},
+        "expired_at": {"type": "string", "format": "date-time", "example": "2024-12-31T23:59:59Z"},
+        "multiple": {"type": "boolean", "example": true}
+      }
+    }
+  },
+  "brunoConfig": {
+    "version": "1",
+    "name": "Freelance Management API",
+    "type": "collection",
+    "ignore": ["node_modules", ".git"],
+    "docs": {
+      "description": "This collection provides comprehensive API documentation for the Freelance Management System. It includes all endpoints for managing users, clients, products, orders, and system configuration.",
+      "features": [
+        "JWT Authentication with creator tracking",
+        "Automatic inventory management",
+        "Advanced order processing with tax and voucher support",
+        "Smart voucher system with expiry and single-use validation",
+        "Automatic payment status calculation (IN_PROGRESS/PAID)",
+        "Real-time due amount tracking",
+        "Single-use voucher auto-deactivation",
+        "Multi-format product image upload",
+        "Comprehensive client management with addresses and phone numbers",
+        "Real-time stock tracking",
+        "Flexible pricing and discount system"
+      ],
+      "getting_started": [
+        "1. Start the development server: npm start",
+        "2. Use the Login endpoint to get a JWT token",
+        "3. Set the token in the environment variables",
+        "4. All subsequent requests will use Bearer token authentication",
+        "5. Explore the various endpoints organized by functionality"
+      ],
+      "pricing_formula": "Order Total = (Products Sub-Total + Tax) - Voucher Discount + Tip",
+      "payment_tracking": "Due Amount = max(0, Total Price - Paid Amount). Paid Status: IN_PROGRESS if due > 0, PAID if due <= 0",
+      "voucher_validation": "Vouchers are validated for expiry, active status, and single-use restrictions before order creation",
+      "inventory_management": "Product quantities are automatically reduced when orders are created and restored when orders are deleted.",
+      "creator_tracking": "All orders track which user created them via JWT authentication"
+    }
+  }
+}

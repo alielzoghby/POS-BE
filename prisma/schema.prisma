@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id    Int      @id @default(autoincrement())
+  email      String   @unique @db.VarChar(100)
+  first_name String   @db.VarChar(30)
+  last_name  String   @db.VarChar(30)
+  password   String   @db.VarChar(100)
+  role       UserRole @default(CASHIER)
+  orders     Order[]
+
+  @@map("users")
+}
+
+model Client {
+  client_id     Int           @id @default(autoincrement())
+  title         Title?
+  first_name    String        @db.VarChar(30)
+  last_name     String        @db.VarChar(30)
+  email         String        @unique @db.VarChar(100)
+  company       String?       @db.VarChar(50)
+  sales         Int?
+  active        Boolean       @default(true)
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  orders        Order[]
+  addresses     Address[]
+  phoneNumbers  PhoneNumber[]
+
+  @@map("clients")
+}
+
+model Address {
+  address_id  Int     @id @default(autoincrement())
+  client_id   Int
+  street      String  @db.VarChar(100)
+  city        String  @db.VarChar(50)
+  state       String? @db.VarChar(50)
+  postal_code String? @db.VarChar(20)
+  country     String  @db.VarChar(50)
+  is_primary  Boolean @default(false)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  // Relations
+  client      Client  @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+
+model PhoneNumber {
+  phone_id     Int         @id @default(autoincrement())
+  client_id    Int
+  phone_number String      @db.VarChar(20)
+  phone_type   PhoneType   @default(MOBILE)
+  is_primary   Boolean     @default(false)
+  created_at   DateTime    @default(now())
+  updated_at   DateTime    @updatedAt
+  
+  // Relations
+  client       Client      @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+
+  @@map("phone_numbers")
+}
+
+model Order {
+  order_id          Int            @id @default(autoincrement())
+  client_id         Int?
+  reference         String         @unique @db.VarChar(15)
+  total_price       Float
+  tip               Float? 
+  payment_method    Payment?
+  voucher_reference String?        @db.VarChar(25)
+  payment_reference String? 
+  created_by        Int
+  created_at        DateTime       @default(now())
+  paid              Float          @default(0)
+  due               Float          @default(0)
+  paid_status       PaidStatus     @default(IN_PROGRESS)
+  tax               Float          @default(0)
+  taxAmount         Float          @default(0)
+  discounted        Float          @default(0)
+  sub_total         Float          @default(0)
+  client            Client?        @relation(fields: [client_id], references: [client_id])
+  creator           User           @relation(fields: [created_by], references: [user_id])
+  productOrders     ProductOrder[]
+
+  voucher           Voucher_table? @relation(fields: [voucher_reference], references: [voucher_reference])
+
+  @@map("orders")
+}
+
+model Voucher_table {
+  voucher_id        Int       @id @default(autoincrement())
+  amount            Int?
+  percentage        Int?
+  voucher_reference String    @unique  @db.VarChar(15)
+  active            Boolean   @default(true)
+  expired_at        DateTime?
+  multiple          Boolean   @default(true)
+  orders            Order[]  
+}
+model configuration {
+  id  Int @id @default(1)
+  tax Int @default(0)
+}
+model Category {
+  category_id Int       @id @default(autoincrement())
+  name        String    @unique @db.VarChar(50)
+  created_at  DateTime  @default(now())
+
+  // Relations
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  product_id             Int            @id @default(autoincrement())
+  image                  String?        @default("https://via.placeholder.com/300x300?text=No+Image") @db.VarChar(500)
+  name                   String         @db.VarChar(50)
+  reference              String         @unique @db.VarChar(15)
+  category_id            Int
+  base_price             Float
+  final_price            Float
+  status                 StockStatus    @default(IN_STOCK)
+  quantity               Int
+  unit                   Unit           @default(PIECE)
+  unit_value             Float          @default(1)
+  original_unit_value    Float?      
+  unit_price             Float          @default(0)
+  show_online            Boolean        @default(true)
+  sub_product            Boolean        @default(false)
+  expiration_date        String?        @db.VarChar(30)
+  lot                    String?        @db.VarChar(50)
+  created_at             DateTime       @default(now())
+  updated_at             DateTime       @default(now())
+
+  // Relations
+  category               Category       @relation(fields: [category_id], references: [category_id])
+  productOrders          ProductOrder[]
+
+  // Self relation for sub-products
+  parent_id              Int?
+  parent                 Product?       @relation("ProductHierarchy", fields: [parent_id], references: [product_id])
+  subProducts            Product[]      @relation("ProductHierarchy")
+
+  @@map("products")
+}
+
+enum StockStatus {
+  IN_STOCK     @map("in stock")
+  OUT_OF_STOCK @map("out of stock")
+  LOW_STOCK    @map("low stock")
+  @@map("stock_status")
+}
+
+model ProductOrder {
+  product_id Int
+  order_id   Int
+  quantity   Int
+  price      Float
+  order      Order   @relation(fields: [order_id], references: [order_id])
+  product    Product @relation(fields: [product_id], references: [product_id])
+
+  @@id([product_id, order_id])
+  @@map("product_orders")
+}
+
+enum UserRole {
+  ADMIN
+  CASHIER
+}
+
+enum Title {
+  M
+  Mme
+}
+
+enum Payment {
+  CASH
+  CARD
+}
+
+enum Unit {
+  PIECE
+  KILOGRAM
+  GRAM
+  LITER
+  MILLILITER
+  METER
+  CENTIMETER
+  PACK
+  BOX
+  BOTTLE
+}
+
+enum PhoneType {
+  MOBILE
+  HOME
+  WORK
+  FAX
+}
+
+enum PaidStatus {
+  IN_PROGRESS
+  PAID
+}
