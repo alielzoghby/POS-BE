@@ -46,19 +46,17 @@ const PORT = process.env.PORT || 3000;
 const swaggerDocument = JSON.parse(fs.readFileSync('./swagger-output.json', 'utf-8'));
 
 // Middleware
-const whitelist = [
-  'http://localhost:4200', // Angular dev
-  'https://pos-system-two-jet.vercel.app', // production
-];
+const whitelist = ['http://localhost:4200', 'https://pos-system-two-jet.vercel.app'];
 
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || whitelist.includes(origin)) {
-      callback(null, true);
+      callback(null, origin);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
