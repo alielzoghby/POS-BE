@@ -71,7 +71,7 @@ model PhoneNumber {
 }
 
 model Order {
-  order_id          Int            @id @default(autoincrement())
+ order_id          Int            @id @default(autoincrement())
   client_id         Int?
   reference         String         @unique @db.VarChar(15)
   total_price       Float
@@ -88,10 +88,13 @@ model Order {
   taxAmount         Float          @default(0)
   discounted        Float          @default(0)
   sub_total         Float          @default(0)
+
+  phone_number      String?        @db.VarChar(20)
+  address           String?        @db.VarChar(200)
+
   client            Client?        @relation(fields: [client_id], references: [client_id])
   creator           User           @relation(fields: [created_by], references: [user_id])
   productOrders     ProductOrder[]
-
   voucher           Voucher_table? @relation(fields: [voucher_reference], references: [voucher_reference])
 
   @@map("orders")

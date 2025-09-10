@@ -77,12 +77,17 @@ const create = async (data, userId) => {
   }
   const validatedData = validation.data;
 
-  // Check if client exists (only if provided)
+  // Check if client exists
+  let client = null;
   if (validatedData.client_id) {
-    const existingClient = await prisma.client.findUnique({
+    client = await prisma.client.findUnique({
       where: { client_id: validatedData.client_id },
+      include: {
+        addresses: { where: { is_primary: true }, take: 1 },
+        phoneNumbers: { where: { is_primary: true }, take: 1 },
+      },
     });
-    if (!existingClient) {
+    if (!client) {
       return [new CustomResponse(404, 'Client not found'), null];
     }
   }
@@ -121,9 +126,17 @@ const create = async (data, userId) => {
         tax: totals.tax,
         sub_total: totals.subTotal,
         reference: generateReference(),
+
+        phone_number: client
+          ? client.phoneNumbers[0]?.phone_number || null
+          : validatedData.phone_number || null,
+        address: client
+          ? `${client.addresses[0]?.street || ''}, ${client.addresses[0]?.city || ''}, ${
+              client.addresses[0]?.country || ''
+            }`.trim()
+          : validatedData.address || null,
       };
 
-      // If voucher is single-use, mark it as inactive after first use
       if (validatedData.voucher_reference) {
         const voucher = await tx.voucher_table.findUnique({
           where: { voucher_reference: validatedData.voucher_reference },
@@ -199,15 +212,19 @@ const createWithProducts = async (data, userId) => {
   const validatedData = validation.data;
 
   // Check if client exists (only if provided)
+  let client = null;
   if (validatedData.client_id) {
-    const existingClient = await prisma.client.findUnique({
+    client = await prisma.client.findUnique({
       where: { client_id: validatedData.client_id },
+      include: {
+        addresses: { where: { is_primary: true }, take: 1 },
+        phoneNumbers: { where: { is_primary: true }, take: 1 },
+      },
     });
-    if (!existingClient) {
+    if (!client) {
       return [new CustomResponse(404, 'Client not found'), null];
     }
   }
-
   // Validate voucher if provided
   if (validatedData.voucher_reference) {
     const voucherValidation = await VoucherController.validateVoucherForOrder(
@@ -263,6 +280,16 @@ const createWithProducts = async (data, userId) => {
         tax: 0,
         sub_total: 0,
         reference: generateReference(),
+        phone_number: client
+          ? client.phoneNumbers[0]?.phone_number || null
+          : validatedData.phone_number || null,
+        address: client
+          ? `${client.addresses[0]?.street || ''}, ${client.addresses[0]?.city || ''}, ${
+              client.addresses[0]?.state || ''
+            }, ${client.addresses[0]?.country || ''} - ${
+              client.addresses[0]?.postal_code || ''
+            }`.trim()
+          : validatedData.address || null,
       },
     });
 
